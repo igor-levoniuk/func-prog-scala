@@ -1,5 +1,4 @@
 apply plugin: 'scala'
-apply plugin: 'idea'
 
 ext {
     scalaVersion = '2.11'
