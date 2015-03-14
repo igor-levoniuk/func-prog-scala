@@ -104,4 +104,10 @@ class Chapter3Test extends WordSpec with ShouldMatchers {
     }
   }
 
+  "smartProduct" should {
+    "return zero upon first encountered zero element in the list" in {
+      List.iterationCountingProduct(List(1, 2, 3, 0, 4, 5)) shouldBe (0, 4)
+      List.iterationCountingProduct(List(0, 1, 2, 3, 4, 5)) shouldBe (0, 1)
+    }
+  }
 }

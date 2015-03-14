@@ -7,17 +7,40 @@ package object chapter3 {
   case class Cons[+A](head: A, tail: List[A]) extends List[A]
 
   object List {
-    def sum(xs: List[Int]): Int =
+
+    def foldRight[A, B](xs: List[A], z: B)(f: (A, => B) => B): B =
       xs match {
-        case Nil => 0
-        case Cons(y, ys) => y + sum(ys)
+        case Nil => z
+        case Cons(y, ys) => f(y, foldRight(ys, z)(f))
       }
 
+    def sum(xs: List[Int]): Int =
+      foldRight(xs, 0)(_ + _)
+
     def product(xs: List[Double]): Double =
-      xs match {
-        case Nil => 1
-        case Cons(y, ys) => y * product(ys)
+      foldRight(xs, 1.0)(_ * _)
+
+    def smartProduct(xs: List[Double]): Double = {
+      def smartReduce(a: Double, b: => Double): Double =
+        if (a == 0) 0 else a * b
+
+      foldRight(xs, 1.0)(smartReduce)
+    }
+
+    /**
+     * Need method this to test smartProduct.
+     * Note: this is why mutation is hard - swap return type to be (Int, Double)
+     * and counting will not work (even though it's not hard ot fix).
+     */
+    def iterationCountingProduct(xs: List[Double]): (Double, Int) = {
+      var n = 0
+      def smartReduce(a: Double, b: => Double): Double = {
+        n = n + 1
+        if (a == 0) 0 else a * b
       }
+
+      (foldRight(xs, 1.0)(smartReduce), n)
+    }
 
     def apply[A](xs: A*): List[A] =
       if (xs.isEmpty) Nil
