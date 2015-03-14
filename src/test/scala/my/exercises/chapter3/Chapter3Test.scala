@@ -169,10 +169,62 @@ class Chapter3Test extends WordSpec with ShouldMatchers {
 
   "concat" should {
     "concatenate all provided list into single one, preserving the ordering" in {
-      List.concat(List(List(1, 2), Nil, List(3))) shouldBe List(1, 2, 3)
-      List.concat(List(Nil, List(1, 2, 3), List(4, 5), List(6, 7), Nil)) shouldBe List(1, 2, 3, 4, 5, 6, 7)
-      List.concat(Nil) shouldBe Nil
+      List.flatten(List(List(1, 2), Nil, List(3))) shouldBe List(1, 2, 3)
+      List.flatten(List(Nil, List(1, 2, 3), List(4, 5), List(6, 7), Nil)) shouldBe List(1, 2, 3, 4, 5, 6, 7)
+      List.flatten(Nil) shouldBe Nil
     }
   }
 
+  "plusOne" should {
+    "increase each element of a list by 1" in {
+      List.plusOne(Nil) shouldBe Nil
+      List.plusOne(List(1, 2, 3)) shouldBe List(2, 3, 4)
+    }
+  }
+
+  "asStrings" should {
+    "convert all elements of a list into strings" in {
+      List.asStrings(Nil) shouldBe Nil
+      List.asStrings(List(1, 2, 3)) shouldBe List("1", "2", "3")
+      List.asStrings(List("foo", "bar", "baz")) shouldBe List("foo", "bar", "baz")
+    }
+  }
+
+  "map" should {
+    "convert elements using function supplied" in {
+      List.map(Nil)(_ => throw new RuntimeException) shouldBe Nil
+      List.map(List(1, 2, 3))(_ + 1) shouldBe List(2, 3, 4)
+      List.map(List(1, 2, 3))(_.toString) shouldBe List("1", "2", "3")
+      List.map(List("foo", "bar", "baz"))(_ + "s") shouldBe List("foos", "bars", "bazs")
+
+      List.tailRecursiveMap(Nil)(_ => throw new RuntimeException) shouldBe Nil
+      List.tailRecursiveMap(List(1, 2, 3))(_ + 1) shouldBe List(2, 3, 4)
+      List.tailRecursiveMap(List(1, 2, 3))(_.toString) shouldBe List("1", "2", "3")
+      List.tailRecursiveMap(List("foo", "bar", "baz"))(_ + "s") shouldBe List("foos", "bars", "bazs")
+    }
+  }
+
+  "filter" should {
+    "return list containing only those elements which match predicate" in {
+      List.filter(List(1, 2, 3, 4, 5))(_ % 2 == 0) shouldBe List(2, 4)
+      List.filter(List(1, 2, 1, 3, 1, 4, 1, 5, 1))(_ >= 2) shouldBe List(2, 3, 4, 5)
+
+      List.tailRecursiveFilter(List(1, 2, 3, 4, 5))(_ % 2 == 0) shouldBe List(2, 4)
+      List.tailRecursiveFilter(List(1, 2, 1, 3, 1, 4, 1, 5, 1))(_ >= 2) shouldBe List(2, 3, 4, 5)
+    }
+  }
+
+  "flatMap" should {
+    "transform each element into list with supplied function and concat (flatten) resulting lists" in {
+      List.flatMap(Nil)(_ => throw new RuntimeException) shouldBe Nil
+      List.flatMap(List(1, 2, 3))(List(_)) shouldBe List(1, 2, 3)
+      List.flatMap(List(1, 2, 3))(x => List(x, x)) shouldBe List(1, 1, 2, 2, 3, 3)
+      List.flatMap(List(1, 2, 3))(x => List.map(List(1, 2, 3))(_ * x)) shouldBe List(1, 2, 3, 2, 4, 6, 3, 6, 9)
+
+      List.tailRecursiveFlatMap(Nil)(_ => throw new RuntimeException) shouldBe Nil
+      List.tailRecursiveFlatMap(List(1, 2, 3))(List(_)) shouldBe List(1, 2, 3)
+      List.tailRecursiveFlatMap(List(1, 2, 3))(x => List(x, x)) shouldBe List(1, 1, 2, 2, 3, 3)
+      List.tailRecursiveFlatMap(List(1, 2, 3))(x => List.map(List(1, 2, 3))(_ * x)) shouldBe List(1, 2, 3, 2, 4, 6, 3, 6, 9)
+    }
+  }
 }

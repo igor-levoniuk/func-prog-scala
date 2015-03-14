@@ -111,11 +111,52 @@ package object chapter3 {
     def append[A](xs: List[A], x: A): List[A] =
       foldRightUsingFoldLeft(xs, Cons(x, Nil))(Cons(_, _))
 
-    def concat[A](xs: List[List[A]]): List[A] =
+    def flatten[A](xs: List[List[A]]): List[A] =
       xs match {
         case Nil => Nil
-        case Cons(ys, ls) => foldRightUsingFoldLeft(ys, concat(ls))(Cons(_, _))
+        case Cons(ys, ls) => foldRightUsingFoldLeft(ys, flatten(ls))(Cons(_, _))
       }
+
+    def plusOne(xs: List[Int]): List[Int] =
+      foldRightUsingFoldLeft(xs, Nil: List[Int]) {
+        (x, l) => Cons(x + 1, l)
+      }
+
+    def asStrings[A](xs: List[A]): List[String] =
+      foldRightUsingFoldLeft(xs, Nil: List[String]) {
+        (x, l) => Cons(x.toString, l)
+      }
+
+    def map[A, B](xs: List[A])(f: A => B): List[B] =
+      xs match {
+        case Nil => Nil
+        case Cons(y, ys) => Cons(f(y), map(ys)(f))
+      }
+
+    def tailRecursiveMap[A, B](xs: List[A])(f: A => B): List[B] =
+      foldRightUsingFoldLeft(xs, Nil: List[B]) {
+        (x, l) => Cons(f(x), l)
+      }
+
+    def filter[A](xs: List[A])(p: A => Boolean): List[A] =
+      xs match {
+        case Nil => Nil
+        case Cons(y, ys) => if (p(y)) Cons(y, filter(ys)(p)) else filter(ys)(p)
+      }
+
+    def tailRecursiveFilter[A](xs: List[A])(p: A => Boolean): List[A] =
+      foldRightUsingFoldLeft(xs, Nil: List[A]) {
+        (x, l) => if (p(x)) Cons(x, l) else l
+      }
+
+    def flatMap[A, B](xs: List[A])(f: A => List[B]): List[B] =
+      flatten(map(xs)(f))
+
+    def tailRecursiveFlatMap[A, B](xs: List[A])(f: A => List[B]): List[B] =
+      foldRightUsingFoldLeft(xs, Nil: List[B]) {
+        (x, l) => foldRightUsingFoldLeft(f(x), l)(Cons(_, _))
+      }
+
   }
 
 }
