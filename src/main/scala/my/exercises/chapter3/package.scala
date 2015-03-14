@@ -14,11 +14,23 @@ package object chapter3 {
         case Cons(y, ys) => f(y, foldRight(ys, z)(f))
       }
 
+    def foldLeft[A, B](xs: List[A], z: B)(f: (A, => B) => B): B =
+      xs match {
+        case Nil => z
+        case Cons(y, ys) => foldLeft(ys, f(y, z))(f)
+      }
+
     def sum(xs: List[Int]): Int =
       foldRight(xs, 0)(_ + _)
 
+    def sumFoldLeft(xs: List[Int]): Int =
+      foldLeft(xs, 0)(_ + _)
+
     def product(xs: List[Double]): Double =
       foldRight(xs, 1.0)(_ * _)
+
+    def productFoldLeft(xs: List[Double]): Double =
+      foldLeft(xs, 1.0)(_ * _)
 
     def smartProduct(xs: List[Double]): Double = {
       def smartReduce(a: Double, b: => Double): Double =
@@ -41,6 +53,12 @@ package object chapter3 {
 
       (foldRight(xs, 1.0)(smartReduce), n)
     }
+
+    def length[A](xs: List[A]): Int =
+     foldRight(xs, 0)((_,b) => b + 1)
+
+    def lengthFoldLeft[A](xs: List[A]): Int =
+      foldLeft(xs, 0)((_, b) => b + 1)
 
     def apply[A](xs: A*): List[A] =
       if (xs.isEmpty) Nil
@@ -83,6 +101,10 @@ package object chapter3 {
         case Nil | Cons(_, Nil) => Nil
         case Cons(y, ys) => Cons(y, init(ys))
       }
+
+    def reverse[A](xs: List[A]): List[A] =
+      foldLeft(xs, Nil: List[A])(Cons(_, _))
+
   }
 
 }

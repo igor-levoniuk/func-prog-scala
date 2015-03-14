@@ -110,4 +110,46 @@ class Chapter3Test extends WordSpec with ShouldMatchers {
       List.iterationCountingProduct(List(0, 1, 2, 3, 4, 5)) shouldBe (0, 1)
     }
   }
+
+  "foldRight" when {
+    "supplied with cons as a reduce function" should {
+      "work as list constructor" in {
+        List.foldRight(List(1, 2, 3), Nil: List[Int])(Cons(_, _)) shouldBe List(1, 2, 3)
+      }
+    }
+    "very large list supplied" should {
+      "fail with stack overflow error" in {
+        intercept[StackOverflowError] {
+          List.foldRight(List[Int](1 to 2000 : _*), 0)(_ + _)
+        }
+      }
+    }
+  }
+
+  "length function" should {
+    "return the length of the list specified" in {
+      List.length(Nil) shouldBe 0
+      List.length(List(1)) shouldBe 1
+      List.length(List(1, 2, 3, 4, 5)) shouldBe 5
+    }
+  }
+
+  "foldLeft" should {
+    "be able to calculate sum, product and length of a listjust as foldRight" in {
+      val xs = List[Int](1 to 101 : _*)
+      val ds = List[Double]((1 to 23).map(_.toDouble) : _*)
+      List.sum(xs) shouldEqual List.sumFoldLeft(xs)
+      List.product(ds) shouldEqual List.productFoldLeft(ds)
+      List.length(xs) shouldEqual List.lengthFoldLeft(xs)
+    }
+    "not fall with stack overflow" in {
+      List.foldLeft(List[Int](1 to 5000 : _*), 0)(_ + _)
+    }
+  }
+
+  "reverse" should {
+    "return the list with elements in reversed order" in {
+      List.reverse(List(1, 2, 3, 4, 5)) shouldBe List(5, 4, 3, 2, 1)
+    }
+  }
 }
