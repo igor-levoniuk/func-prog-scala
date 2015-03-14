@@ -105,6 +105,17 @@ package object chapter3 {
     def reverse[A](xs: List[A]): List[A] =
       foldLeft(xs, Nil: List[A])(Cons(_, _))
 
+    def foldRightUsingFoldLeft[A, B](xs: List[A], z: B)(f: (A, => B) => B): B =
+      foldLeft(foldLeft(xs, Nil: List[A])(Cons(_, _)), z)(f)
+
+    def append[A](xs: List[A], x: A): List[A] =
+      foldRightUsingFoldLeft(xs, Cons(x, Nil))(Cons(_, _))
+
+    def concat[A](xs: List[List[A]]): List[A] =
+      xs match {
+        case Nil => Nil
+        case Cons(ys, ls) => foldRightUsingFoldLeft(ys, concat(ls))(Cons(_, _))
+      }
   }
 
 }

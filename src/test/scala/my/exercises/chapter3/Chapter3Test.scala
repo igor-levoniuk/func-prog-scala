@@ -112,9 +112,10 @@ class Chapter3Test extends WordSpec with ShouldMatchers {
   }
 
   "foldRight" when {
-    "supplied with cons as a reduce function" should {
+    "folding list with cons" should {
       "work as list constructor" in {
         List.foldRight(List(1, 2, 3), Nil: List[Int])(Cons(_, _)) shouldBe List(1, 2, 3)
+        List.foldRightUsingFoldLeft(List(1, 2, 3), Nil: List[Int])(Cons(_, _)) shouldBe List(1, 2, 3)
       }
     }
     "very large list supplied" should {
@@ -135,15 +136,21 @@ class Chapter3Test extends WordSpec with ShouldMatchers {
   }
 
   "foldLeft" should {
-    "be able to calculate sum, product and length of a listjust as foldRight" in {
-      val xs = List[Int](1 to 101 : _*)
-      val ds = List[Double]((1 to 23).map(_.toDouble) : _*)
+    "be able to calculate sum, product and length of a list just as foldRight" in {
+      val xs = List[Int](1 to 101: _*)
+      val ds = List[Double]((1 to 23).map(_.toDouble): _*)
       List.sum(xs) shouldEqual List.sumFoldLeft(xs)
       List.product(ds) shouldEqual List.productFoldLeft(ds)
       List.length(xs) shouldEqual List.lengthFoldLeft(xs)
+      List.sum(xs) shouldEqual List.foldRightUsingFoldLeft(xs, 0)(_ + _)
+      List.product(ds) shouldEqual List.foldRightUsingFoldLeft(ds, 1.0)(_ * _)
+      List.length(xs) shouldEqual List.foldRightUsingFoldLeft(xs, 0)((_, b) => b + 1)
     }
     "not fall with stack overflow" in {
       List.foldLeft(List[Int](1 to 5000 : _*), 0)(_ + _)
+    }
+    "reverse elements when folding list with cons" in {
+      List.foldLeft(List(1, 2, 3), Nil: List[Int])(Cons(_, _)) shouldBe List(3, 2, 1)
     }
   }
 
@@ -152,4 +159,20 @@ class Chapter3Test extends WordSpec with ShouldMatchers {
       List.reverse(List(1, 2, 3, 4, 5)) shouldBe List(5, 4, 3, 2, 1)
     }
   }
+
+  "append" when {
+    "should add element to the end of the list" in {
+      List.append(Nil, 42) shouldBe List(42)
+      List.append(List(1, 2), 3) shouldBe List(1, 2, 3)
+    }
+  }
+
+  "concat" should {
+    "concatenate all provided list into single one, preserving the ordering" in {
+      List.concat(List(List(1, 2), Nil, List(3))) shouldBe List(1, 2, 3)
+      List.concat(List(Nil, List(1, 2, 3), List(4, 5), List(6, 7), Nil)) shouldBe List(1, 2, 3, 4, 5, 6, 7)
+      List.concat(Nil) shouldBe Nil
+    }
+  }
+
 }
