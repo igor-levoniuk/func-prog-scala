@@ -211,6 +211,9 @@ class Chapter3Test extends WordSpec with ShouldMatchers {
 
       List.tailRecursiveFilter(List(1, 2, 3, 4, 5))(_ % 2 == 0) shouldBe List(2, 4)
       List.tailRecursiveFilter(List(1, 2, 1, 3, 1, 4, 1, 5, 1))(_ >= 2) shouldBe List(2, 3, 4, 5)
+
+      List.filterUsingFlatMap(List(1, 2, 3, 4, 5))(_ % 2 == 0) shouldBe List(2, 4)
+      List.filterUsingFlatMap(List(1, 2, 1, 3, 1, 4, 1, 5, 1))(_ >= 2) shouldBe List(2, 3, 4, 5)
     }
   }
 
@@ -225,6 +228,24 @@ class Chapter3Test extends WordSpec with ShouldMatchers {
       List.tailRecursiveFlatMap(List(1, 2, 3))(List(_)) shouldBe List(1, 2, 3)
       List.tailRecursiveFlatMap(List(1, 2, 3))(x => List(x, x)) shouldBe List(1, 1, 2, 2, 3, 3)
       List.tailRecursiveFlatMap(List(1, 2, 3))(x => List.map(List(1, 2, 3))(_ * x)) shouldBe List(1, 2, 3, 2, 4, 6, 3, 6, 9)
+    }
+  }
+
+  "sumLists" should {
+    "add elements of two integer lists" in {
+      List.sumLists(List(1, 2, 3), Nil) shouldBe List(1, 2, 3)
+      List.sumLists(List(1, 2, 3), List(1, 2, 3)) shouldBe List(2, 4, 6)
+      List.sumLists(List(1, 2), List(1)) shouldBe List(2, 2)
+    }
+  }
+
+  "zipWith" should {
+    "combine two arbitrary lists into single one using provided folding function" in {
+      List.zipWith(List(1, 2, 3), Nil)(_ + _) shouldBe List(1, 2, 3)
+      List.zipWith(List(1, 2, 3), List(1, 2, 3))(_ + _) shouldBe List(2, 4, 6)
+      List.zipWith(List(1, 2), List(1))(_ + _) shouldBe List(2, 2)
+      List.zipWith(List("foo", "bar", "baz"), List("baz", "bar", "foo"))(_ + _) shouldBe List("foobaz", "barbar", "bazfoo")
+      List.zipWith(List(true, true, false, false), List(true, false, true, false))(_ && _) shouldBe List(true, false, false, false)
     }
   }
 }

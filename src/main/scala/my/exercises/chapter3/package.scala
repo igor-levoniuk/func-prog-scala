@@ -149,12 +149,31 @@ package object chapter3 {
         (x, l) => if (p(x)) Cons(x, l) else l
       }
 
+    def filterUsingFlatMap[A](xs: List[A])(p: A => Boolean): List[A] =
+      flatMap(xs)(x => if (p(x)) List(x) else Nil)
+
     def flatMap[A, B](xs: List[A])(f: A => List[B]): List[B] =
       flatten(map(xs)(f))
 
     def tailRecursiveFlatMap[A, B](xs: List[A])(f: A => List[B]): List[B] =
       foldRightUsingFoldLeft(xs, Nil: List[B]) {
         (x, l) => foldRightUsingFoldLeft(f(x), l)(Cons(_, _))
+      }
+
+    def sumLists(xs: List[Int], ys: List[Int]): List[Int] =
+      (xs, ys) match {
+        case (Nil, Nil) => Nil
+        case (Cons(x1, xs1), Nil)  => Cons(x1, sumLists(xs1, Nil))
+        case (Nil, Cons(y1, ys1)) => Cons(y1, sumLists(ys1, Nil))
+        case (Cons(x1, xs1), Cons(y1, ys1))  => Cons(x1 + y1, sumLists(xs1, ys1))
+      }
+
+    def zipWith[A](xs: List[A], ys: List[A])(f: (A, A) => A): List[A] =
+      (xs, ys) match {
+        case (Nil, Nil) => Nil
+        case (Cons(x1, xs1), Nil)  => Cons(x1, zipWith(xs1, Nil)(f))
+        case (Nil, Cons(y1, ys1)) => Cons(y1, zipWith(ys1, Nil)(f))
+        case (Cons(x1, xs1), Cons(y1, ys1))  => Cons(f(x1, y1), zipWith(xs1, ys1)(f))
       }
 
   }
