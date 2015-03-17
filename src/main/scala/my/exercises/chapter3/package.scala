@@ -176,6 +176,20 @@ package object chapter3 {
         case (Cons(x1, xs1), Cons(y1, ys1))  => Cons(f(x1, y1), zipWith(xs1, ys1)(f))
       }
 
+    def hasSubsequence[A](xs: List[A], sub: List[A]): Boolean = {
+      def sameElements(ys: List[A], zs: List[A]): Boolean =
+        (ys, zs) match {
+          case (_, Nil) => true
+          case (Cons(y, ys1), Cons(z, zs1)) if y == z => sameElements(ys1, zs1)
+          case _ => false
+        }
+
+      xs match {
+        case Nil => sub == Nil
+        case l @ Cons(_, ys) => sameElements(l, sub) || hasSubsequence(ys, sub)
+      }
+    }
+
   }
 
 }

@@ -248,4 +248,17 @@ class Chapter3Test extends WordSpec with ShouldMatchers {
       List.zipWith(List(true, true, false, false), List(true, false, true, false))(_ && _) shouldBe List(true, false, false, false)
     }
   }
+
+  "hasSubsequence" should {
+    "indicate whether one list is a sub-list of other" in {
+      List.hasSubsequence(Nil, Nil) shouldBe true
+      List.hasSubsequence(List(1, 2, 3), Nil) shouldBe true
+      List.hasSubsequence(List(1, 2, 3), List(1, 2, 3)) shouldBe true
+      List.hasSubsequence(List(1, 2), List(2, 1)) shouldBe false
+      List.hasSubsequence(List("foo", "bar", "baz"), List("foo")) shouldBe true
+      List.hasSubsequence(List("foo", "bar", "baz"), List("foo", "bar")) shouldBe true
+      List.hasSubsequence(List("foo", "bar", "baz"), List("foo", "baz")) shouldBe false
+    }
+  }
+
 }
