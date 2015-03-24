@@ -265,41 +265,64 @@ class Chapter3Test extends WordSpec with ShouldMatchers {
   "size" should {
     "calculate size of a tree" in {
       Tree.size(Leaf(42)) shouldBe 1
-      Tree.size(Node(Leaf(1), Leaf(2))) shouldBe 3
-      Tree.size(Node(Leaf("1"), Leaf(true))) shouldBe 3
-      Tree.size(Node(Node(Leaf(1), Leaf(2)), Node(Leaf(3), Leaf(4)))) shouldBe 7
+      Tree.size(Branch(Leaf(1), Leaf(2))) shouldBe 3
+      Tree.size(Branch(Leaf("1"), Leaf(true))) shouldBe 3
+      Tree.size(Branch(Branch(Leaf(1), Leaf(2)), Branch(Leaf(3), Leaf(4)))) shouldBe 7
+
+      Tree.sizeUsingFold(Leaf(42)) shouldBe 1
+      Tree.sizeUsingFold(Branch(Leaf(1), Leaf(2))) shouldBe 3
+      Tree.sizeUsingFold(Branch(Leaf("1"), Leaf(true))) shouldBe 3
+      Tree.sizeUsingFold(Branch(Branch(Leaf(1), Leaf(2)), Branch(Leaf(3), Leaf(4)))) shouldBe 7
     }
   }
 
   "maximum" should {
     "return max element of an integer tree" in {
       Tree.maximum(Leaf(-1)) shouldBe -1
-      Tree.maximum(Node(Leaf(1), Leaf(2))) shouldBe 2
-      Tree.maximum(Node(Node(Leaf(1), Leaf(2)), Node(Leaf(3), Leaf(4)))) shouldBe 4
-      Tree.maximum(Node(Node(Leaf(4), Leaf(2)), Node(Leaf(3), Leaf(1)))) shouldBe 4
-      Tree.maximum(Node(Node(Leaf(1), Leaf(4)), Node(Leaf(3), Leaf(2)))) shouldBe 4
-      Tree.maximum(Node(Node(Leaf(1), Leaf(3)), Node(Leaf(4), Leaf(2)))) shouldBe 4
+      Tree.maximum(Branch(Leaf(1), Leaf(2))) shouldBe 2
+      Tree.maximum(Branch(Branch(Leaf(1), Leaf(2)), Branch(Leaf(3), Leaf(4)))) shouldBe 4
+      Tree.maximum(Branch(Branch(Leaf(4), Leaf(2)), Branch(Leaf(3), Leaf(1)))) shouldBe 4
+      Tree.maximum(Branch(Branch(Leaf(1), Leaf(4)), Branch(Leaf(3), Leaf(2)))) shouldBe 4
+      Tree.maximum(Branch(Branch(Leaf(1), Leaf(3)), Branch(Leaf(4), Leaf(2)))) shouldBe 4
+
+      Tree.maximumUsingFold(Leaf(-1)) shouldBe -1
+      Tree.maximumUsingFold(Branch(Leaf(1), Leaf(2))) shouldBe 2
+      Tree.maximumUsingFold(Branch(Branch(Leaf(1), Leaf(2)), Branch(Leaf(3), Leaf(4)))) shouldBe 4
+      Tree.maximumUsingFold(Branch(Branch(Leaf(4), Leaf(2)), Branch(Leaf(3), Leaf(1)))) shouldBe 4
+      Tree.maximumUsingFold(Branch(Branch(Leaf(1), Leaf(4)), Branch(Leaf(3), Leaf(2)))) shouldBe 4
+      Tree.maximumUsingFold(Branch(Branch(Leaf(1), Leaf(3)), Branch(Leaf(4), Leaf(2)))) shouldBe 4
     }
   }
 
   "depth" should {
     "calculate max depth of a tree" in {
       Tree.depth(Leaf(42)) shouldBe 1
-      Tree.depth(Node(Leaf(1), Leaf(2))) shouldBe 2
-      Tree.depth(Node(Leaf("1"), Leaf(true))) shouldBe 2
-      Tree.depth(Node(Node(Leaf(1), Leaf(2)), Node(Leaf(3), Leaf(4)))) shouldBe 3
-      Tree.depth(Node(Leaf(1), Node(Leaf(2), Node(Leaf(3), Node(Leaf(4), Leaf(5)))))) shouldBe 5
-      Tree.depth(Node(Node(Node(Node(Leaf(5), Leaf(4)), Leaf(3)), Leaf(2)), Leaf(1))) shouldBe 5
+      Tree.depth(Branch(Leaf(1), Leaf(2))) shouldBe 2
+      Tree.depth(Branch(Leaf("1"), Leaf(true))) shouldBe 2
+      Tree.depth(Branch(Branch(Leaf(1), Leaf(2)), Branch(Leaf(3), Leaf(4)))) shouldBe 3
+      Tree.depth(Branch(Leaf(1), Branch(Leaf(2), Branch(Leaf(3), Branch(Leaf(4), Leaf(5)))))) shouldBe 5
+      Tree.depth(Branch(Branch(Branch(Branch(Leaf(5), Leaf(4)), Leaf(3)), Leaf(2)), Leaf(1))) shouldBe 5
+
+      Tree.depthUsingFold(Leaf(42)) shouldBe 1
+      Tree.depthUsingFold(Branch(Leaf(1), Leaf(2))) shouldBe 2
+      Tree.depthUsingFold(Branch(Leaf("1"), Leaf(true))) shouldBe 2
+      Tree.depthUsingFold(Branch(Branch(Leaf(1), Leaf(2)), Branch(Leaf(3), Leaf(4)))) shouldBe 3
+      Tree.depthUsingFold(Branch(Leaf(1), Branch(Leaf(2), Branch(Leaf(3), Branch(Leaf(4), Leaf(5)))))) shouldBe 5
+      Tree.depthUsingFold(Branch(Branch(Branch(Branch(Leaf(5), Leaf(4)), Leaf(3)), Leaf(2)), Leaf(1))) shouldBe 5
     }
   }
 
   "map" should {
     "apply specified function over each element of the tree, preserving the structure" in {
-      val t = Node(Node(Leaf(1), Leaf(2)), Node(Leaf(3), Leaf(4)))
+      val t = Branch(Branch(Leaf(1), Leaf(2)), Branch(Leaf(3), Leaf(4)))
 
-      Tree.map(t)(_.toString) shouldBe Node(Node(Leaf("1"), Leaf("2")), Node(Leaf("3"), Leaf("4")))
-      Tree.map(t)(_ + 1) shouldBe Node(Node(Leaf(2), Leaf(3)), Node(Leaf(4), Leaf(5)))
-      Tree.map(t)(x => if (x % 2 == 0) "even" else "odd") shouldBe Node(Node(Leaf("odd"), Leaf("even")), Node(Leaf("odd"), Leaf("even")))
+      Tree.map(t)(_.toString) shouldBe Branch(Branch(Leaf("1"), Leaf("2")), Branch(Leaf("3"), Leaf("4")))
+      Tree.map(t)(_ + 1) shouldBe Branch(Branch(Leaf(2), Leaf(3)), Branch(Leaf(4), Leaf(5)))
+      Tree.map(t)(x => if (x % 2 == 0) "even" else "odd") shouldBe Branch(Branch(Leaf("odd"), Leaf("even")), Branch(Leaf("odd"), Leaf("even")))
+
+      Tree.mapUsingFold(t)(_.toString) shouldBe Branch(Branch(Leaf("1"), Leaf("2")), Branch(Leaf("3"), Leaf("4")))
+      Tree.mapUsingFold(t)(_ + 1) shouldBe Branch(Branch(Leaf(2), Leaf(3)), Branch(Leaf(4), Leaf(5)))
+      Tree.mapUsingFold(t)(x => if (x % 2 == 0) "even" else "odd") shouldBe Branch(Branch(Leaf("odd"), Leaf("even")), Branch(Leaf("odd"), Leaf("even")))
     }
   }
 
