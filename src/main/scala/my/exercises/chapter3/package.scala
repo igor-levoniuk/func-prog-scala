@@ -192,5 +192,37 @@ package object chapter3 {
 
   }
 
+
+  sealed trait Tree[+A]
+  case class Leaf[A](value: A) extends Tree[A]
+  case class Node[A](left: Tree[A], right: Tree[A]) extends Tree[A]
+
+  object Tree {
+
+    def size(tree: Tree[_]): Int =
+      tree match {
+        case Leaf(_) => 1
+        case Node(t1, t2) => 1 + size(t1) + size(t2)
+      }
+
+    def maximum(tree: Tree[Int]): Int =
+      tree match {
+        case Leaf(x) => x
+        case Node(t1, t2) => maximum(t1) max maximum(t2)
+      }
+
+    def depth(tree: Tree[_]): Int =
+      tree match {
+        case Leaf(_) => 1
+        case Node(t1, t2) => 1 + (depth(t1) max depth(t2))
+      }
+
+    def map[A, B](tree: Tree[A])(f: A => B): Tree[B] =
+      tree match {
+        case Leaf(x) => Leaf(f(x))
+        case Node(t1, t2) => Node(map(t1)(f), map(t2)(f))
+      }
+
+  }
 }
 
