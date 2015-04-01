@@ -109,4 +109,19 @@ class Chapter4Test extends WordSpec with ShouldMatchers {
       }
     }
   }
+
+  "sequence" when {
+    "called on a list containing empty option(s)" should {
+      "return empty option" in {
+        sequence(List(None, None, None)) shouldBe None
+        sequence(List(Some(42), Some("foo"), None)) shouldBe None
+      }
+    }
+    "called on a list containing only non-empty options" should {
+      "return List with options flattened (extracted options values)" in {
+        sequence(List.empty) shouldBe Some(List.empty)
+        sequence(List(Some(42), Some("foo"), Some(true))) shouldBe Some(List(42, "foo", true))
+      }
+    }
+  }
 }

@@ -38,4 +38,12 @@ package object chapter4 {
 
   def map2[A, B, C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] = for (v1 <- a; v2 <- b) yield f(v1, v2)
 
+  def sequence[A](xs: List[Option[A]]): Option[List[A]] =
+    xs.foldRight[Option[List[A]]](Some(Nil)) {
+      (a, acc) => a match {
+        case None => None
+        case Some(x) => acc.map(x :: _)
+      }
+    }
+
 }
