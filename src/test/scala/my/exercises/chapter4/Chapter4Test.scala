@@ -78,4 +78,35 @@ class Chapter4Test extends WordSpec with ShouldMatchers {
       }
     }
   }
+
+  "mean of a sequence of numbers should be calculated" in {
+    mean(Seq.empty) shouldBe None
+    mean(Seq(1, 1, 1)) shouldBe Some(1.0)
+    mean(Seq(1, 2, 3)) shouldBe Some(2.0)
+    mean(Seq(100, 10, 52)) shouldBe Some(54.0)
+  }
+
+  "variance of a sequence of numbers should be calculated" in {
+    variance(Seq.empty) shouldBe None
+    variance(Seq(1, 1, 1)) shouldBe Some(0)
+    variance(Seq(1, 2, 3, 2, 1)) shouldBe Some(0.56)
+    variance(Seq(5, 6, 9, 7)) shouldBe Some(2.1875)
+  }
+
+  "map2" when {
+    "either or both options are empty" should {
+      "return empty option" in {
+        map2(None, None)((_, _) => throw new RuntimeException) shouldBe None
+        map2(Some(42), None)((_, _) => throw new RuntimeException) shouldBe None
+        map2(None, Some(42))((_, _) => throw new RuntimeException) shouldBe None
+      }
+    }
+    "both options are non-empty" should {
+      "return non-empty option containing result of specified function" in {
+        map2(Some(42), Some(1))(_ + _) shouldBe Some(43)
+        map2(Some("foo"), Some("bar"))(_ + _) shouldBe Some("foobar")
+        map2(Some("foo"), Some(42))(_ + _) shouldBe Some("foo42")
+      }
+    }
+  }
 }

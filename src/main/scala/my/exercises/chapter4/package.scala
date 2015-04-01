@@ -29,4 +29,13 @@ package object chapter4 {
     override def orElse[B >: A](default: => Option[B]): Option[B] = this
   }
 
+  def mean(xs: Seq[Double]): Option[Double] = if (xs.isEmpty) None else Some(xs.sum / xs.length)
+
+  def variance(xs: Seq[Double]): Option[Double] = for {
+    meanValue <- mean(xs)
+    varianceValue <- mean(xs.map(x => math.pow(x - meanValue, 2)))
+  } yield varianceValue
+
+  def map2[A, B, C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] = for (v1 <- a; v2 <- b) yield f(v1, v2)
+
 }
