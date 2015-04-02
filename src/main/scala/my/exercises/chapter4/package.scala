@@ -29,6 +29,13 @@ package object chapter4 {
     override def orElse[B >: A](default: => Option[B]): Option[B] = this
   }
 
+  def Try[A](expression: => A): Option[A] =
+    try {
+      Some(expression)
+    } catch {
+      case e: Exception => None
+    }
+
   def mean(xs: Seq[Double]): Option[Double] = if (xs.isEmpty) None else Some(xs.sum / xs.length)
 
   def variance(xs: Seq[Double]): Option[Double] = for {
@@ -39,11 +46,13 @@ package object chapter4 {
   def map2[A, B, C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] = for (v1 <- a; v2 <- b) yield f(v1, v2)
 
   def sequence[A](xs: List[Option[A]]): Option[List[A]] =
-    xs.foldRight[Option[List[A]]](Some(Nil)) {
-      (a, acc) => a match {
+    traverse(xs)(identity)
+
+  def traverse[A, B](xs: List[A])(f: A => Option[B]): Option[List[B]] =
+    xs.foldRight[Option[List[B]]](Some(Nil)) {
+      (a, acc) => f(a) match {
         case None => None
-        case Some(x) => acc.map(x :: _)
+        case Some(b) => acc.map(b :: _)
       }
     }
-
 }

@@ -79,6 +79,22 @@ class Chapter4Test extends WordSpec with ShouldMatchers {
     }
   }
 
+  "Try" when {
+    "provided function ends normally" should {
+      "return option containing function result" in {
+        Try(42) shouldBe Some(42)
+        Try("foo" + "bar") shouldBe Some("foobar")
+      }
+    }
+    "provided function throws an exception" should {
+      "return empty option" in {
+        Try(throw new RuntimeException) shouldBe None
+        Try(42 / 0) shouldBe None
+        Try(List.empty.head) shouldBe None
+      }
+    }
+  }
+
   "mean of a sequence of numbers should be calculated" in {
     mean(Seq.empty) shouldBe None
     mean(Seq(1, 1, 1)) shouldBe Some(1.0)
@@ -124,4 +140,20 @@ class Chapter4Test extends WordSpec with ShouldMatchers {
       }
     }
   }
+
+  "traverse" when {
+    "whole list can be converted to non-empty option with provided function" should {
+      "return non-empty option on a list of flattened (extracted) option values" in {
+        traverse(List(1, 2, 3, 4, 5))(x => Try(x.toString)) shouldBe Some(List("1", "2", "3", "4", "5"))
+        traverse(List("1", "2", "3", "4", "5"))(x => Try(x.toInt)) shouldBe Some(List(1, 2, 3, 4, 5))
+      }
+    }
+    "some elements of the list can't convrted (list will contain empty options)" should {
+      "return empty option" in {
+        traverse(List(1, 2, 3, 4, 5))(x => Try(x / (x - 3))) shouldBe None
+        traverse(List("1", "2", "3", "banana", "5"))(x => Try(x.toInt)) shouldBe None
+      }
+    }
+  }
+
 }
