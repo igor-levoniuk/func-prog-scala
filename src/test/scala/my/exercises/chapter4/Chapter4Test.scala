@@ -156,4 +156,69 @@ class Chapter4Test extends WordSpec with ShouldMatchers {
     }
   }
 
+
+  "right either" when {
+    "trying to map its value" should {
+      "return right either containing result of applying provided function" in {
+        Right(42).map(_ + 1) shouldBe Right(43)
+        Right(42).map(_.toString) shouldBe Right("42")
+      }
+    }
+    "applying another operation to its value with flatMap" should {
+      "return outcome of applying provided function which will be right or left either" in {
+        val divByZeroError = Left("Division by zero")
+        val oneDivX: Int => Either[String, Int] = x => if (x != 0) Right(1 / x) else divByZeroError
+        Right(42).flatMap(oneDivX) shouldBe Right(1 / 42)
+        Right(0).flatMap(oneDivX) shouldBe divByZeroError
+      }
+    }
+    "providing fallback logic with orElse" should {
+      "return self without evaluating provided fallback expression" in {
+        Right(0).orElse(Right(42)) shouldBe Right(0)
+        Right(0).orElse(Left("Misterious error")) shouldBe Right(0)
+        Right(0).orElse(throw new RuntimeException) shouldBe Right(0)
+      }
+    }
+    "trying to combine it with other either value" when {
+      val intOrError = Right(42)
+      "combining with right either" should {
+        "return right either containing combined value" in {
+          intOrError.map2(Right(1))(_ + _) shouldBe Right(43)
+          intOrError.map2(Right(" banana"))(_ + _) shouldBe Right("42 banana")
+        }
+      }
+      "combining with left either" should {
+        "return error value from left either operand without evaluating provided function" in {
+          intOrError.map2(Left("failed"))(_ + _) shouldBe Left("failed")
+          intOrError.map2(Left("failed"))((_, _) => throw new RuntimeException) shouldBe Left("failed")
+        }
+      }
+    }
+  }
+
+  "left either" when {
+    val err: Either[String, Int] = Left("error")
+    "trying to map its value" should {
+      "return self without evaluating provided function" in {
+        err.map(_ => throw new RuntimeException) shouldBe err
+      }
+    }
+    "applying another operation to its value with flatMap" should {
+      "return self without evaluating provided function" in {
+        err.flatMap(_ => throw new RuntimeException) shouldBe err
+      }
+    }
+    "providing fallback logic with orElse" should {
+      "return provided fallback value (left or right either)" in {
+        err.orElse(Right(0)) shouldBe Right(0)
+        err.orElse(Left("another error")) shouldBe Left("another error")
+      }
+    }
+    "trying to combine it with other either value" should {
+      "return self" in {
+        err.map2(Right(42))((a, b) => a + b) shouldBe err
+      }
+    }
+  }
+
 }
