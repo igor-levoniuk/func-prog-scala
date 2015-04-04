@@ -29,32 +29,30 @@ package object chapter4 {
     override def orElse[B >: A](default: => Option[B]): Option[B] = this
   }
 
-  def Try[A](expression: => A): Option[A] =
-    try {
-      Some(expression)
-    } catch {
-      case e: Exception => None
-    }
+  object Option {
 
-  def mean(xs: Seq[Double]): Option[Double] = if (xs.isEmpty) None else Some(xs.sum / xs.length)
+    def Try[A](expression: => A): Option[A] = try Some(expression) catch { case e: Exception => None }
 
-  def variance(xs: Seq[Double]): Option[Double] = for {
-    meanValue <- mean(xs)
-    varianceValue <- mean(xs.map(x => math.pow(x - meanValue, 2)))
-  } yield varianceValue
+    def mean(xs: Seq[Double]): Option[Double] = if (xs.isEmpty) None else Some(xs.sum / xs.length)
 
-  def map2[A, B, C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] = for (v1 <- a; v2 <- b) yield f(v1, v2)
+    def variance(xs: Seq[Double]): Option[Double] = for {
+      meanValue <- mean(xs)
+      varianceValue <- mean(xs.map(x => math.pow(x - meanValue, 2)))
+    } yield varianceValue
 
-  def sequence[A](xs: List[Option[A]]): Option[List[A]] =
-    traverse(xs)(identity)
+    def map2[A, B, C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] = for (v1 <- a; v2 <- b) yield f(v1, v2)
 
-  def traverse[A, B](xs: List[A])(f: A => Option[B]): Option[List[B]] =
-    xs.foldRight[Option[List[B]]](Some(Nil)) {
-      (a, acc) => f(a) match {
-        case None => None
-        case Some(b) => acc.map(b :: _)
+    def sequence[A](xs: List[Option[A]]): Option[List[A]] =
+      traverse(xs)(identity)
+
+    def traverse[A, B](xs: List[A])(f: A => Option[B]): Option[List[B]] =
+      xs.foldRight[Option[List[B]]](Some(Nil)) {
+        (a, acc) => f(a) match {
+          case None => None
+          case Some(b) => acc.map(b :: _)
+        }
       }
-    }
+  }
 
 
   sealed trait Either[+E, +A] {
@@ -76,6 +74,21 @@ package object chapter4 {
     override def flatMap[EE >: Nothing, B](f: (A) => Either[EE, B]): Either[EE, B] = f(value)
     override def orElse[EE >: Nothing, B >: A](default: => Either[EE, B]): Either[EE, B] = this
     override def map2[EE >: Nothing, B, C](b: Either[EE, B])(f: (A, B) => C): Either[EE, C] = b.map(f(value, _))
+  }
+
+  object Either {
+
+    def Try[A](expression: => A): Either[Exception, A] = try Right(expression) catch { case e: Exception => Left(e) }
+
+    def sequence[E, A](xs: List[Either[E, A]]): Either[E, List[A]] = traverse(xs)(identity)
+
+    def traverse[E, A, B](xs: List[A])(f: A => Either[E, B]): Either[E, List[B]] =
+      xs.foldRight(Right(Nil): Either[E, List[B]]) {
+        (a, acc) => f(a) match {
+          case Right(b) => acc.map(b :: _)
+          case left @ Left(_) => left
+        }
+      }
   }
 
 }

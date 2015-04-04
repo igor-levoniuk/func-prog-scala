@@ -1,8 +1,8 @@
 package my.exercises.chapter4
 
-import org.scalatest.{ShouldMatchers, WordSpec}
+import org.scalatest.{Inside, ShouldMatchers, WordSpec}
 
-class Chapter4Test extends WordSpec with ShouldMatchers {
+class Chapter4Test extends WordSpec with ShouldMatchers with Inside {
 
   "Empty option" when {
     "trying to get its value" should {
@@ -79,83 +79,79 @@ class Chapter4Test extends WordSpec with ShouldMatchers {
     }
   }
 
-  "Try" when {
-    "provided function ends normally" should {
-      "return option containing function result" in {
-        Try(42) shouldBe Some(42)
-        Try("foo" + "bar") shouldBe Some("foobar")
+  "Option companion object" should {
+    "have method Try, such that" when {
+      "provided function ends normally" should {
+        "return option containing function result" in {
+          Option.Try(42) shouldBe Some(42)
+          Option.Try("foo" + "bar") shouldBe Some("foobar")
+        }
+      }
+      "provided function throws an exception" should {
+        "return empty option" in {
+          Option.Try(throw new RuntimeException) shouldBe None
+          Option.Try(42 / 0) shouldBe None
+          Option.Try(List.empty.head) shouldBe None
+        }
       }
     }
-    "provided function throws an exception" should {
-      "return empty option" in {
-        Try(throw new RuntimeException) shouldBe None
-        Try(42 / 0) shouldBe None
-        Try(List.empty.head) shouldBe None
+    "calculate mean of a sequence of numbers should be calculated" in {
+      Option.mean(Seq.empty) shouldBe None
+      Option.mean(Seq(1, 1, 1)) shouldBe Some(1.0)
+      Option.mean(Seq(1, 2, 3)) shouldBe Some(2.0)
+      Option.mean(Seq(100, 10, 52)) shouldBe Some(54.0)
+    }
+    "calculate variance of a sequence of numbers should be calculated" in {
+      Option.variance(Seq.empty) shouldBe None
+      Option.variance(Seq(1, 1, 1)) shouldBe Some(0)
+      Option.variance(Seq(1, 2, 3, 2, 1)) shouldBe Some(0.56)
+      Option.variance(Seq(5, 6, 9, 7)) shouldBe Some(2.1875)
+    }
+    "combine two Options with map2 in a way that" when {
+      "at least one option is empty" should {
+        "return empty option" in {
+          Option.map2(None, None)((_, _) => throw new RuntimeException) shouldBe None
+          Option.map2(Some(42), None)((_, _) => throw new RuntimeException) shouldBe None
+          Option.map2(None, Some(42))((_, _) => throw new RuntimeException) shouldBe None
+        }
+      }
+      "both options are non-empty" should {
+        "return non-empty option containing result of specified function" in {
+          Option.map2(Some(42), Some(1))(_ + _) shouldBe Some(43)
+          Option.map2(Some("foo"), Some("bar"))(_ + _) shouldBe Some("foobar")
+          Option.map2(Some("foo"), Some(42))(_ + _) shouldBe Some("foo42")
+        }
       }
     }
-  }
-
-  "mean of a sequence of numbers should be calculated" in {
-    mean(Seq.empty) shouldBe None
-    mean(Seq(1, 1, 1)) shouldBe Some(1.0)
-    mean(Seq(1, 2, 3)) shouldBe Some(2.0)
-    mean(Seq(100, 10, 52)) shouldBe Some(54.0)
-  }
-
-  "variance of a sequence of numbers should be calculated" in {
-    variance(Seq.empty) shouldBe None
-    variance(Seq(1, 1, 1)) shouldBe Some(0)
-    variance(Seq(1, 2, 3, 2, 1)) shouldBe Some(0.56)
-    variance(Seq(5, 6, 9, 7)) shouldBe Some(2.1875)
-  }
-
-  "map2" when {
-    "either or both options are empty" should {
-      "return empty option" in {
-        map2(None, None)((_, _) => throw new RuntimeException) shouldBe None
-        map2(Some(42), None)((_, _) => throw new RuntimeException) shouldBe None
-        map2(None, Some(42))((_, _) => throw new RuntimeException) shouldBe None
+    "process sequence of option in a way that" when {
+      "called on a list containing empty option(s)" should {
+        "return empty option" in {
+          Option.sequence(List(None, None, None)) shouldBe None
+          Option.sequence(List(Some(42), Some("foo"), None)) shouldBe None
+        }
+      }
+      "called on a list containing only non-empty options" should {
+        "return List with options flattened (extracted options values)" in {
+          Option.sequence(List.empty) shouldBe Some(List.empty)
+          Option.sequence(List(Some(42), Some("foo"), Some(true))) shouldBe Some(List(42, "foo", true))
+        }
       }
     }
-    "both options are non-empty" should {
-      "return non-empty option containing result of specified function" in {
-        map2(Some(42), Some(1))(_ + _) shouldBe Some(43)
-        map2(Some("foo"), Some("bar"))(_ + _) shouldBe Some("foobar")
-        map2(Some("foo"), Some(42))(_ + _) shouldBe Some("foo42")
+    "traverse over a list in a way that" when {
+      "whole list can be converted to non-empty options with provided function" should {
+        "return non-empty option on a list of flattened (extracted) option values" in {
+          Option.traverse(List(1, 2, 3, 4, 5))(x => Option.Try(x.toString)) shouldBe Some(List("1", "2", "3", "4", "5"))
+          Option.traverse(List("1", "2", "3", "4", "5"))(x => Option.Try(x.toInt)) shouldBe Some(List(1, 2, 3, 4, 5))
+        }
       }
-    }
-  }
-
-  "sequence" when {
-    "called on a list containing empty option(s)" should {
-      "return empty option" in {
-        sequence(List(None, None, None)) shouldBe None
-        sequence(List(Some(42), Some("foo"), None)) shouldBe None
-      }
-    }
-    "called on a list containing only non-empty options" should {
-      "return List with options flattened (extracted options values)" in {
-        sequence(List.empty) shouldBe Some(List.empty)
-        sequence(List(Some(42), Some("foo"), Some(true))) shouldBe Some(List(42, "foo", true))
-      }
-    }
-  }
-
-  "traverse" when {
-    "whole list can be converted to non-empty option with provided function" should {
-      "return non-empty option on a list of flattened (extracted) option values" in {
-        traverse(List(1, 2, 3, 4, 5))(x => Try(x.toString)) shouldBe Some(List("1", "2", "3", "4", "5"))
-        traverse(List("1", "2", "3", "4", "5"))(x => Try(x.toInt)) shouldBe Some(List(1, 2, 3, 4, 5))
-      }
-    }
-    "some elements of the list can't convrted (list will contain empty options)" should {
-      "return empty option" in {
-        traverse(List(1, 2, 3, 4, 5))(x => Try(x / (x - 3))) shouldBe None
-        traverse(List("1", "2", "3", "banana", "5"))(x => Try(x.toInt)) shouldBe None
+      "only some elements of the list can be converted to non-empty options" should {
+        "return empty option" in {
+          Option.traverse(List(1, 2, 3, 4, 5))(x => Option.Try(x / (x - 3))) shouldBe None
+          Option.traverse(List("1", "2", "3", "banana", "5"))(x => Option.Try(x.toInt)) shouldBe None
+        }
       }
     }
   }
-
 
   "right either" when {
     "trying to map its value" should {
@@ -221,4 +217,75 @@ class Chapter4Test extends WordSpec with ShouldMatchers {
     }
   }
 
+  "Either companion object" should {
+    "have method Try, such that" when {
+      "provided function ends normally" should {
+        "return Right either containing function result" in {
+          Either.Try(42) shouldBe Right(42)
+          Either.Try("foo" + "bar") shouldBe Right("foobar")
+        }
+      }
+      "provided function throws an exception" should {
+        "return left either containing the exception thrown" in {
+          inside(Either.Try(throw new RuntimeException("failed"))) {
+            case Left(e: Exception) =>
+              e.getClass shouldBe classOf[RuntimeException]
+              e.getMessage shouldBe "failed"
+            case x => fail(s"$x was not Left[Exception]")
+          }
+          inside(Either.Try(42 / 0)) {
+            case Left(e: Exception) =>
+              e.getClass shouldBe classOf[ArithmeticException]
+              e.getMessage shouldBe "/ by zero"
+            case x => fail(s"$x was not Left[Exception]")
+          }
+          inside(Either.Try(List.empty.head)) {
+            case Left(e: Exception) =>
+              e.getClass shouldBe classOf[NoSuchElementException]
+              e.getMessage shouldBe "head of empty list"
+            case x => fail(s"$x was not Left[Exception]")
+          }
+        }
+      }
+    }
+    "process sequence of Either values in a way that" when {
+      "called on a list containing Left values" should {
+        "return empty first Left value" in {
+          val failed = Left("failed")
+          Either.sequence(List(Right(42), Right(0), failed)) shouldBe failed
+          Either.sequence(List(Right(42), Right("foo"), failed)) shouldBe failed
+        }
+      }
+      "called on a list containing only right values" should {
+        "return List of extracted Either values" in {
+          Either.sequence(List.empty) shouldBe Right(List.empty)
+          Either.sequence(List(Right(42), Right("foo"), Right(true))) shouldBe Right(List(42, "foo", true))
+        }
+      }
+    }
+    "traverse over a list in a way that" when {
+      "whole list can be converted to right either with provided function" should {
+        "return right either containing a list of converted values" in {
+          Either.traverse(List(1, 2, 3, 4, 5))(x => Either.Try(x.toString)) shouldBe Right(List("1", "2", "3", "4", "5"))
+          Either.traverse(List("1", "2", "3", "4", "5"))(x => Either.Try(x.toInt)) shouldBe Right(List(1, 2, 3, 4, 5))
+        }
+      }
+      "only some elements of the list can be converted" should {
+        "return left either containing error" in {
+          inside(Either.traverse(List(1, 2, 3, 4, 5))(x => Either.Try(x / (x - 3)))) {
+            case Left(e: Exception) =>
+              e.getClass shouldBe classOf[ArithmeticException]
+              e.getMessage shouldBe "/ by zero"
+            case x => fail(s"$x was not Left[Exception]")
+          }
+          inside(Either.traverse(List("1", "2", "3", "banana", "5"))(x => Either.Try(x.toInt))) {
+            case Left(e: Exception) =>
+              e.getClass shouldBe classOf[NumberFormatException]
+              e.getMessage shouldBe "For input string: \"banana\""
+            case x => fail(s"$x was not Left[Exception]")
+          }
+        }
+      }
+    }
+  }
 }
