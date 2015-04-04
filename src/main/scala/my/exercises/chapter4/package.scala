@@ -47,10 +47,7 @@ package object chapter4 {
 
     def traverse[A, B](xs: List[A])(f: A => Option[B]): Option[List[B]] =
       xs.foldRight[Option[List[B]]](Some(Nil)) {
-        (a, acc) => f(a) match {
-          case None => None
-          case Some(b) => acc.map(b :: _)
-        }
+        (a, acc) => Option.map2(f(a), acc)(_ :: _)
       }
   }
 
@@ -84,10 +81,7 @@ package object chapter4 {
 
     def traverse[E, A, B](xs: List[A])(f: A => Either[E, B]): Either[E, List[B]] =
       xs.foldRight(Right(Nil): Either[E, List[B]]) {
-        (a, acc) => f(a) match {
-          case Right(b) => acc.map(b :: _)
-          case left @ Left(_) => left
-        }
+        (a, acc) => f(a).map2(acc)(_ :: _)
       }
   }
 
