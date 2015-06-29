@@ -3,6 +3,7 @@ package my.exercises
 package object chapter5 {
 
   trait Stream[+A] {
+    import Stream._
 
     def head: A = this match {
       case Empty => throw new NoSuchElementException("head of empty Stream")
@@ -19,6 +20,8 @@ package object chapter5 {
       case Cons(a, _) => Some(a())
     }
 
+    def headOptionFR: Option[A] = foldRight(Option.empty[A])((a, _) => Some(a))
+
     def toList: List[A] = this match {
       case Empty => List.empty[A]
       case Cons(a, as) => a() :: as().toList
@@ -27,7 +30,7 @@ package object chapter5 {
     def take(n: Int): Stream[A] = this match {
       case Empty => Empty
       case _  if n <= 0 => Empty
-      case Cons(a, as) => Stream.cons(a(), as().take(n - 1))
+      case Cons(a, as) => cons(a(), as().take(n - 1))
     }
 
     def drop(n: Int): Stream[A] = this match {
@@ -37,9 +40,29 @@ package object chapter5 {
     }
 
     def takeWhile(p: A => Boolean): Stream[A] = this match {
-      case Cons(a, as) if p(a()) => Stream.cons(a(), as().takeWhile(p))
+      case Cons(a, as) if p(a()) => cons(a(), as().takeWhile(p))
       case _ => Empty
     }
+
+    def takeWhileFR(p: A => Boolean): Stream[A] = foldRight(empty[A])((a, b) => if (p(a)) cons(a, b) else Empty)
+
+    def foldRight[B](z: B)(f: (=> A, => B) => B): B = this match {
+      case Cons(a, as) => f(a(), as().foldRight(z)(f))
+      case _ => z
+    }
+
+    def exists(p: A => Boolean): Boolean = foldRight(false)((a, b) => p(a) || b)
+
+    def forAll(p: A => Boolean): Boolean = foldRight(true)((a, b) => p(a) && b)
+
+    def map[B](f: A => B): Stream[B] = foldRight(empty[B])((a, b) => cons(f(a), b))
+
+    def filter(p: A => Boolean): Stream[A] = foldRight(empty[A])((a, b) => if (p(a)) cons(a, b) else b)
+
+    def append[AA >: A](as: => Stream[AA]): Stream[AA] = foldRight(as)((a, b) => cons(a, b))
+
+    def flatMap[B](f: A => Stream[B]): Stream[B] = foldRight(empty[B])((a, b) => f(a).append(b))
+
   }
 
   case object Empty extends Stream[Nothing]
