@@ -80,6 +80,21 @@ package object chapter5 {
     def empty[A]: Stream[A] = Empty
 
     def apply[A](as: A*): Stream[A] = if (as.isEmpty) empty else cons(as.head, apply(as.tail: _*))
+
+    def constant[A](a: A): Stream[A] = cons(a, constant(a))
+
+    def from(n: Int): Stream[Int] = cons(n, from(n + 1))
+
+    def fibs: Stream[Int] = {
+      def go(a: Int, b: Int): Stream[Int] = cons(a, go(b, a + b))
+      go(0, 1)
+    }
+
+    def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] =
+      f(z) match {
+        case None => Empty
+        case Some((a, s)) => cons(a, unfold(s)(f))
+      }
   }
 
 }

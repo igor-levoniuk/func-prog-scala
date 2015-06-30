@@ -153,6 +153,24 @@ class Chapter5Test extends WordSpec with ShouldMatchers {
       Stream(Some(1), None, Some(42), None, Some(7))
         .flatMap(_.map(n => Stream(n)).getOrElse(Stream.empty)).toList shouldBe List(1, 42, 7)
     }
+    "have method to generate Stream of constant values" in {
+      Stream.constant(42).take(3).toList shouldBe List(42, 42, 42)
+      Stream.constant("foo").take(100).forAll(_ == "foo")
+    }
+    "have method to generate stream of natural numbers" in {
+      Stream.from(1).take(5).toList shouldBe List(1, 2, 3, 4, 5)
+      Stream.from(-1).take(3).toList shouldBe List(-1, 0, 1)
+      Stream.from(Int.MaxValue).take(1).head shouldBe Int.MaxValue
+    }
+    "have method generating Fibonacci numbers" in {
+      Stream.fibs.take(10).toList shouldBe List(0, 1, 1, 2, 3, 5, 8, 13, 21, 34)
+    }
+    "have unfold method for constructing Streams" in {
+      Stream.unfold(true)(_ => None) shouldBe Stream.empty
+      Stream.unfold(true)(b => if (b) Some(("foo", false)) else Some(("bar", true)))
+        .take(5).toList shouldBe List("foo", "bar", "foo", "bar", "foo")
+      Stream.unfold(1)(x => if (x <= 5) Some((x, x + 1)) else None).toList shouldBe List(1, 2, 3, 4, 5)
+    }
   }
 
 }
