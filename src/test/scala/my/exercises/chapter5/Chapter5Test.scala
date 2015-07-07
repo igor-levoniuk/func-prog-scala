@@ -73,6 +73,13 @@ class Chapter5Test extends WordSpec with ShouldMatchers {
       Stream(1, 2, 3).take(3).toList shouldBe List(1, 2, 3)
       Stream(1, 2, 3).take(5).toList shouldBe List(1, 2, 3)
       Stream(1, 2, 3, 4, 5).take(2).toList shouldBe List(1, 2)
+
+      Stream.empty.takeUnfold(1000) shouldBe Stream.empty
+      Stream(1, 2, 3).takeUnfold(-1).toList shouldBe List.empty
+      Stream(1, 2, 3).takeUnfold(0).toList shouldBe List.empty
+      Stream(1, 2, 3).takeUnfold(3).toList shouldBe List(1, 2, 3)
+      Stream(1, 2, 3).takeUnfold(5).toList shouldBe List(1, 2, 3)
+      Stream(1, 2, 3, 4, 5).takeUnfold(2).toList shouldBe List(1, 2)
     }
     "have method dropping first n elements of a Stream" in {
       Stream.empty.drop(1000) shouldBe Stream.empty
@@ -87,9 +94,14 @@ class Chapter5Test extends WordSpec with ShouldMatchers {
       Stream(true, true, false, true).takeWhile(identity).toList shouldBe List(true, true)
       Stream("foo", "barrr", "bazzz").takeWhile(_.length > 3) shouldBe Empty
       Stream("foo", "bar", "bz").takeWhile(_.length >= 3).toList shouldBe List("foo", "bar")
+
       Stream(true, true, false, true).takeWhileFR(identity).toList shouldBe List(true, true)
       Stream("foo", "barrr", "bazzz").takeWhileFR(_.length > 3) shouldBe Empty
       Stream("foo", "bar", "bz").takeWhileFR(_.length >= 3).toList shouldBe List("foo", "bar")
+
+      Stream(true, true, false, true).takeWhileUnfold(identity).toList shouldBe List(true, true)
+      Stream("foo", "barrr", "bazzz").takeWhileUnfold(_.length > 3) shouldBe Empty
+      Stream("foo", "bar", "bz").takeWhileUnfold(_.length >= 3).toList shouldBe List("foo", "bar")
     }
     "have foldRight method which folds the Stream with the given function starting from the end" in {
       Stream.empty[Int].foldRight(0)(_ + _) shouldBe 0
@@ -125,6 +137,11 @@ class Chapter5Test extends WordSpec with ShouldMatchers {
         Stream(1, 2, 3).map(_ + 1).toList shouldBe List(2, 3, 4)
         Stream(1, 2, 3).map(_.toString).toList shouldBe List("1", "2", "3")
         Stream("foo", "bar", "baz").map(_.charAt(2)).toList shouldBe List('o', 'r', 'z')
+
+        Stream.empty[Int].mapUnfold(_ * 2).toList shouldBe List.empty[Int]
+        Stream(1, 2, 3).mapUnfold(_ + 1).toList shouldBe List(2, 3, 4)
+        Stream(1, 2, 3).mapUnfold(_.toString).toList shouldBe List("1", "2", "3")
+        Stream("foo", "bar", "baz").mapUnfold(_.charAt(2)).toList shouldBe List('o', 'r', 'z')
       }
     }
     "have filter which" should {
@@ -153,23 +170,63 @@ class Chapter5Test extends WordSpec with ShouldMatchers {
       Stream(Some(1), None, Some(42), None, Some(7))
         .flatMap(_.map(n => Stream(n)).getOrElse(Stream.empty)).toList shouldBe List(1, 42, 7)
     }
+    "have method to generate Stream of integer ones" in {
+      Stream.ones.take(3).toList shouldBe List(1, 1, 1)
+      Stream.ones.take(100).forAll(_ == 1)
+
+      Stream.onesUnfold.take(3).toList shouldBe List(1, 1, 1)
+      Stream.onesUnfold.take(100).forAll(_ == 1)
+    }
     "have method to generate Stream of constant values" in {
       Stream.constant(42).take(3).toList shouldBe List(42, 42, 42)
       Stream.constant("foo").take(100).forAll(_ == "foo")
+
+      Stream.constantUnfold(42).take(3).toList shouldBe List(42, 42, 42)
+      Stream.constantUnfold("foo").take(100).forAll(_ == "foo")
     }
     "have method to generate stream of natural numbers" in {
       Stream.from(1).take(5).toList shouldBe List(1, 2, 3, 4, 5)
       Stream.from(-1).take(3).toList shouldBe List(-1, 0, 1)
       Stream.from(Int.MaxValue).take(1).head shouldBe Int.MaxValue
+
+      Stream.fromUnfold(1).take(5).toList shouldBe List(1, 2, 3, 4, 5)
+      Stream.fromUnfold(-1).take(3).toList shouldBe List(-1, 0, 1)
+      Stream.fromUnfold(Int.MaxValue).take(1).head shouldBe Int.MaxValue
     }
     "have method generating Fibonacci numbers" in {
       Stream.fibs.take(10).toList shouldBe List(0, 1, 1, 2, 3, 5, 8, 13, 21, 34)
+
+      Stream.fibsUnfold.take(10).toList shouldBe List(0, 1, 1, 2, 3, 5, 8, 13, 21, 34)
     }
     "have unfold method for constructing Streams" in {
       Stream.unfold(true)(_ => None) shouldBe Stream.empty
       Stream.unfold(true)(b => if (b) Some(("foo", false)) else Some(("bar", true)))
         .take(5).toList shouldBe List("foo", "bar", "foo", "bar", "foo")
       Stream.unfold(1)(x => if (x <= 5) Some((x, x + 1)) else None).toList shouldBe List(1, 2, 3, 4, 5)
+    }
+    "have method to zip two Streams together using provided function for combining elements" in {
+      Stream.empty.zipWith(Stream.empty)((_: Nothing, _: Nothing) => throw new RuntimeException) shouldBe Stream.empty
+      Stream.empty[Int].zipWith(Stream(1, 2))((_, _) => throw new RuntimeException).toList shouldBe List(1, 2)
+      Stream(1, 2).zipWith(Stream.empty)((_, _) => throw new RuntimeException).toList shouldBe List(1, 2)
+      Stream(1, 2, 3).zipWith(Stream(3, 2, 1))(_ + _).toList shouldBe List(4, 4, 4)
+      Stream("foo", "bar", "baz").zipWith(Stream("baz", "bar", "foo"))(_ + _)
+        .toList shouldBe List("foobaz", "barbar", "bazfoo")
+      Stream(1, 2, 3, 4, 5).zipWith(Stream(3, 2, 1))(_ + _).toList shouldBe List(4, 4, 4, 4, 5)
+      Stream(1, 2, 3).zipWith(Stream(3, 2, 1, 0, -1))(_ + _).toList shouldBe List(4, 4, 4, 0, -1)
+    }
+    "have method to zip Streams (potetially of different legth) into Stream of Pairs" in {
+      Stream.empty.zipAll(Stream.empty) shouldBe Stream.empty
+      Stream(1, 2).zipAll(Stream.empty).toList shouldBe List((Some(1), None), (Some(2), None))
+      Stream.empty.zipAll(Stream(1, 2)).toList shouldBe List((None, Some(1)), (None, Some(2)))
+
+      Stream("foo", "bar", "baz").zipAll(Stream("baz", "bar", "foo")).toList shouldBe
+        List((Some("foo"), Some("baz")), (Some("bar"), Some("bar")), (Some("baz"), Some("foo")))
+
+      Stream(1, 2, 3, 4, 5).zipAll(Stream(3, 2, 1)).toList shouldBe
+        List((Some(1), Some(3)), (Some(2), Some(2)), (Some(3), Some(1)), (Some(4), None), (Some(5), None))
+
+      Stream(1, 2, 3).zipAll(Stream(3, 2, 1, 0, -1)).toList shouldBe
+        List((Some(1), Some(3)), (Some(2), Some(2)), (Some(3), Some(1)), (None, Some(0)), (None, Some(-1)))
     }
   }
 
