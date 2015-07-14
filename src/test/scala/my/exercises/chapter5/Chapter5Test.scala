@@ -228,6 +228,25 @@ class Chapter5Test extends WordSpec with ShouldMatchers {
       Stream(1, 2, 3).zipAll(Stream(3, 2, 1, 0, -1)).toList shouldBe
         List((Some(1), Some(3)), (Some(2), Some(2)), (Some(3), Some(1)), (None, Some(0)), (None, Some(-1)))
     }
+    "have method indicating whether this Stream starts with other Stream" in {
+      Stream.empty.startsWith(Stream(42)) shouldBe false
+      Stream.empty.startsWith(Stream.empty) shouldBe true
+
+      Stream(1, 2, 3).startsWith(Stream(1, 2, 3)) shouldBe true
+      Stream(1, 2, 3).startsWith(Stream(1, 2)) shouldBe true
+      Stream(1, 2, 3).startsWith(Stream(1)) shouldBe true
+
+      Stream(1, 2, 3).startsWith(Stream(1, 2, 3, 4)) shouldBe false
+      Stream(1, 2, 3).startsWith(Stream(1, 2, 4)) shouldBe false
+      Stream(1, 2, 3).startsWith(Stream(1, 4)) shouldBe false
+      Stream(1, 2, 3).startsWith(Stream(2, 3)) shouldBe false
+      Stream(1, 2, 3).startsWith(Stream(2)) shouldBe false
+    }
+    "have method producing all possible tails of current stream" in {
+      Stream.empty.tails shouldBe Stream.empty
+      Stream(1).tails.toList.map(_.toList) shouldBe List(List(1))
+      Stream(1, 2, 3).tails.toList.map(_.toList) shouldBe List(List(1, 2, 3), List(2, 3), List(3))
+    }
   }
 
 }

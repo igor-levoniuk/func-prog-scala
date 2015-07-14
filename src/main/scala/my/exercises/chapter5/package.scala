@@ -85,10 +85,22 @@ package object chapter5 {
     def zipAll[B](other: Stream[B]): Stream[(Option[A], Option[B])] = Stream.unfold((this, other)) {
       case (as, bs) => (as.headOption, bs.headOption) match {
         case (aOpt @ Some(_), bOpt @ Some(_)) => Some(((aOpt, bOpt), (as.tail, bs.tail)))
-        case (aOpt @ Some(_), bOpt @ None) => Some(((aOpt, bOpt), (as.tail, empty)))
-        case (aOpt @ None, bOpt @ Some(_)) => Some(((aOpt, bOpt), (empty, bs.tail)))
+        case (aOpt @ Some(_), None) => Some(((aOpt, None), (as.tail, empty)))
+        case (None, bOpt @ Some(_)) => Some(((None, bOpt), (empty, bs.tail)))
         case (None, None) => None
       }
+    }
+
+    def startsWith[AA >: A](s: Stream[AA]): Boolean =
+      zipAll(s).foldRight(true) {
+        case ((Some(x), Some(y)), resultSoFar) => resultSoFar && x == y
+        case ((None, Some(y)), resultSoFar) => false
+        case ((Some(_), None), resultSoFar) => resultSoFar
+      }
+
+    def tails: Stream[Stream[A]] = unfold(this) {
+      case Empty => None
+      case as => Some((as, as.tail))
     }
 
   }
