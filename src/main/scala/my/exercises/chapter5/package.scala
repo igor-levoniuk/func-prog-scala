@@ -103,6 +103,16 @@ package object chapter5 {
       case as => Some((as, as.tail))
     }
 
+    def hasSubsequence[AA >: A](s: Stream[AA]): Boolean =
+      tails.exists(_.startsWith(s))
+
+    def scanRight[B](z: B)(f: (=> A, => B) => B): Stream[B] =
+      foldRight(Stream(z)) {
+        (a, bs) =>
+          lazy val bs0 = bs
+          cons(f(a, bs0.head), bs0)
+      }
+
   }
 
   case object Empty extends Stream[Nothing]

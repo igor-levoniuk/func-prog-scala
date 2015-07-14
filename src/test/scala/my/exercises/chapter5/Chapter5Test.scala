@@ -4,6 +4,8 @@ import org.scalatest.{ShouldMatchers, WordSpec}
 
 class Chapter5Test extends WordSpec with ShouldMatchers {
 
+  def aBomb[A]: A = throw new RuntimeException
+
   import Stream._
 
   "Stream" should {
@@ -34,7 +36,7 @@ class Chapter5Test extends WordSpec with ShouldMatchers {
       }
     }
     "have non-strict smart constructor which supports memoization" in {
-      cons(throw new RuntimeException, throw new RuntimeException).getClass shouldBe classOf[Cons[_]]
+      cons(aBomb, aBomb).getClass shouldBe classOf[Cons[_]]
 
       var a = 3
       def thunkWithSideEffect: Int = { a += 1; a }
@@ -130,7 +132,7 @@ class Chapter5Test extends WordSpec with ShouldMatchers {
     }
     "have map method which" should {
       "be lazy" in {
-        cons[Int](throw new RuntimeException, Empty).map(_ * 2)
+        cons[Int](aBomb, Empty).map(_ * 2)
       }
       "converts elements with given function" in {
         Stream.empty[Int].map(_ * 2).toList shouldBe List.empty[Int]
@@ -146,9 +148,9 @@ class Chapter5Test extends WordSpec with ShouldMatchers {
     }
     "have filter which" should {
       "be lazy" in {
-        intercept[RuntimeException] { cons[Int](throw new RuntimeException, Empty).filter(_ > 0) }
-        intercept[RuntimeException] { cons(0, cons[Int](throw new RuntimeException, Empty)).filter(_ > 0) }
-        cons(1, cons[Int](throw new RuntimeException, Empty)).filter(_ > 0)
+        intercept[RuntimeException] { cons[Int](aBomb, Empty).filter(_ > 0) }
+        intercept[RuntimeException] { cons(0, cons[Int](aBomb, Empty)).filter(_ > 0) }
+        cons(1, cons[Int](aBomb, Empty)).filter(_ > 0)
       }
       "remove elements which doesn't match given predicate" in {
         Stream.empty[Int].filter(_ == 1).toList shouldBe List.empty[Int]
@@ -205,9 +207,9 @@ class Chapter5Test extends WordSpec with ShouldMatchers {
       Stream.unfold(1)(x => if (x <= 5) Some((x, x + 1)) else None).toList shouldBe List(1, 2, 3, 4, 5)
     }
     "have method to zip two Streams together using provided function for combining elements" in {
-      Stream.empty.zipWith(Stream.empty)((_: Nothing, _: Nothing) => throw new RuntimeException) shouldBe Stream.empty
-      Stream.empty[Int].zipWith(Stream(1, 2))((_, _) => throw new RuntimeException).toList shouldBe List(1, 2)
-      Stream(1, 2).zipWith(Stream.empty)((_, _) => throw new RuntimeException).toList shouldBe List(1, 2)
+      Stream.empty.zipWith(Stream.empty)((_: Nothing, _: Nothing) => aBomb) shouldBe Stream.empty
+      Stream.empty[Int].zipWith(Stream(1, 2))((_, _) => aBomb).toList shouldBe List(1, 2)
+      Stream(1, 2).zipWith(Stream.empty)((_, _) => aBomb).toList shouldBe List(1, 2)
       Stream(1, 2, 3).zipWith(Stream(3, 2, 1))(_ + _).toList shouldBe List(4, 4, 4)
       Stream("foo", "bar", "baz").zipWith(Stream("baz", "bar", "foo"))(_ + _)
         .toList shouldBe List("foobaz", "barbar", "bazfoo")
@@ -246,6 +248,29 @@ class Chapter5Test extends WordSpec with ShouldMatchers {
       Stream.empty.tails shouldBe Stream.empty
       Stream(1).tails.toList.map(_.toList) shouldBe List(List(1))
       Stream(1, 2, 3).tails.toList.map(_.toList) shouldBe List(List(1, 2, 3), List(2, 3), List(3))
+    }
+    "have method indicating whether specified Stream is subsequence of this" in {
+      Stream(1, 2, 3, 4).hasSubsequence(Stream(2, 3)) shouldBe true
+      Stream(1, 2, 3).hasSubsequence(Stream(1, 2, 3)) shouldBe true
+      Stream(1, 2, 3).hasSubsequence(Stream(1, 2)) shouldBe true
+      Stream(1, 2, 3).hasSubsequence(Stream(1)) shouldBe true
+      Stream(1, 2, 3).hasSubsequence(Stream(2)) shouldBe true
+      Stream(1, 2, 3).hasSubsequence(Stream(3)) shouldBe true
+
+      Stream.empty.hasSubsequence(Stream(1)) shouldBe false
+      Stream(1, 2, 3, 4).hasSubsequence(Stream(1, 2, 4)) shouldBe false
+      Stream(1, 2, 3, 4).hasSubsequence(Stream(3, 2)) shouldBe false
+    }
+    "have scanRight method which" should {
+      "be lazy" in {
+        val timeBomb = cons(1, cons(2, cons(3, cons(aBomb, Empty)))).scanRight(0)(_ + _)
+        intercept[RuntimeException](timeBomb.toList)
+      }
+      "performs fold and returns Stream of intermidiate results" in {
+        Stream.empty[Int].scanRight(42)(_ + _).toList shouldBe List(42)
+        Stream(1, 2, 3).scanRight(0)(_ + _).toList shouldBe List(6, 5, 3, 0)
+        Stream("foo", "bar", "baz").scanRight("")(_ + _).toList shouldBe List("foobarbaz", "barbaz", "baz", "")
+      }
     }
   }
 
