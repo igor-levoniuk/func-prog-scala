@@ -25,8 +25,12 @@ package object chapter6 {
 
     def double(rng: Rng): (Double, Rng) = {
       val (value, nextRng) = nonNegativeInt(rng)
-      (value.toDouble / Int.MaxValue, nextRng)
+      if (value == Int.MaxValue) (0.0, nextRng)
+      else (value.toDouble / Int.MaxValue, nextRng)
     }
+
+    def doubleUsingMap: Rand[Double] =
+      map(nonNegativeInt)(x => if (x == Int.MaxValue) 0.0 else x.toDouble / Int.MaxValue)
 
     def intDouble(rng: Rng): ((Int, Double), Rng) = {
       val (intVal, doubleRng) = rng.nextInt
@@ -54,5 +58,17 @@ package object chapter6 {
         (value :: nextValues, resultRng)
       }
   }
+
+  type Rand[+A] = Rng => (A, Rng)
+
+  val int: Rand[Int] = rng => rng.nextInt
+
+  def unit[A](a: A): Rand[A] = rng => (a, rng)
+
+  def map[A, B](rand: Rand[A])(f: A => B): Rand[B] =
+    rng => {
+      val (a, nextRng) = rand(rng)
+      (f(a), nextRng)
+    }
 
 }
