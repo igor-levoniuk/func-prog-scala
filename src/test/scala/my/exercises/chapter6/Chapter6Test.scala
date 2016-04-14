@@ -59,19 +59,37 @@ class Chapter6Test extends WordSpec with ShouldMatchers {
       val intDoubles = take(100, rng, Rng.intDouble)
       val (ints1, doubles1) = intDoubles.unzip
       intDoubles.foreach {
-        case (int, double) =>
-          ints1.count(_ == int) shouldBe 1
-          doubles1.count(_ == double) shouldBe 1
-          double should (be >= 0.0 and be < 1.0)
+        case (intVal, doubleVal) =>
+          ints1.count(_ == intVal) shouldBe 1
+          doubles1.count(_ == doubleVal) shouldBe 1
+          doubleVal should (be >= 0.0 and be < 1.0)
+      }
+
+      val intDoubles2 = take(100, rng, intDoubleUsingMap2)
+      val (ints21, doubles21) = intDoubles2.unzip
+      intDoubles2.foreach {
+        case (intVal, doubleVal) =>
+          ints21.count(_ == intVal) shouldBe 1
+          doubles21.count(_ == doubleVal) shouldBe 1
+          doubleVal should (be >= 0.0 and be < 1.0)
       }
 
       val doubleInts = take(100, rng, Rng.doubleInt)
       val (doubles2, ints2) = doubleInts.unzip
       doubleInts.foreach {
-        case (double, int) =>
-          ints2.count(_ == int) shouldBe 1
-          doubles2.count(_ == double) shouldBe 1
-          double should (be >= 0.0 and be < 1.0)
+        case (doubleVal, intVal) =>
+          ints2.count(_ == intVal) shouldBe 1
+          doubles2.count(_ == doubleVal) shouldBe 1
+          doubleVal should (be >= 0.0 and be < 1.0)
+      }
+
+      val doubleInts2 = take(100, rng, doubleIntUsingMap2)
+      val (doubles22, ints22) = doubleInts2.unzip
+      doubleInts2.foreach {
+        case (doubleVal, intVal) =>
+          ints22.count(_ == intVal) shouldBe 1
+          doubles22.count(_ == doubleVal) shouldBe 1
+          doubleVal should (be >= 0.0 and be < 1.0)
       }
     }
     "be able to generate triplet of Double values" in {
@@ -94,6 +112,10 @@ class Chapter6Test extends WordSpec with ShouldMatchers {
       val (ints100, _) = Rng.ints(100)(rng)
       ints100 should have size 100
       ints100.distinct should have size 100
+    }
+    "be able to convert sequence of Rngs to Rng of a sequence" in {
+      sequence(List(unit(1), unit(2), unit(3)))(rng)._1 shouldBe List(1, 2, 3)
+      sequence2(List(unit(1), unit(2), unit(3)))(rng)._1 shouldBe List(1, 2, 3)
     }
   }
 }

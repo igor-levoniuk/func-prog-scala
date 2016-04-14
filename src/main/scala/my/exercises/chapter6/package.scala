@@ -63,6 +63,8 @@ package object chapter6 {
 
   val int: Rand[Int] = rng => rng.nextInt
 
+  val double: Rand[Double] = Rng.double
+
   def unit[A](a: A): Rand[A] = rng => (a, rng)
 
   def map[A, B](rand: Rand[A])(f: A => B): Rand[B] =
@@ -71,4 +73,32 @@ package object chapter6 {
       (f(a), nextRng)
     }
 
+  def map2[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] =
+    rng => {
+      val (a, aRng) = ra(rng)
+      val (b, bRng) = rb(aRng)
+      (f(a, b), bRng)
+    }
+
+  def both[A, B](ra: Rand[A], rb: Rand[B]): Rand[(A, B)] =
+    map2(ra, rb)(Tuple2.apply)
+
+  val intDoubleUsingMap2: Rand[(Int, Double)] = both(int, double)
+
+  val doubleIntUsingMap2: Rand[(Double, Int)] = both(double, int)
+
+  def sequence[A](rs: List[Rand[A]]): Rand[List[A]] =
+    rng => rs.foldRight((List.empty[A], rng)) {
+      case (ra, (as, currRng)) =>
+        val (a, nextRng) = ra(currRng)
+        (a :: as, nextRng)
+    }
+
+  def sequence2[A](rs: List[Rand[A]]): Rand[List[A]] =
+    rng => rs.foldRight((List.empty[A], rng)) {
+      case (ra, (as, currRng)) => map2(ra, unit(as))(_ :: _)(currRng)
+    }
+
+  def sequence3[A](fs: List[Rand[A]]): Rand[List[A]] =
+    fs.foldRight(unit(List[A]()))((f, acc) => map2(f, acc)(_ :: _))
 }
