@@ -59,7 +59,7 @@ package object chapter6 {
       }
   }
 
-  type Rand[+A] = Rng => (A, Rng)
+  type Rand[+T] = Rng => (T, Rng)
 
   val int: Rand[Int] = rng => rng.nextInt
 
@@ -101,4 +101,25 @@ package object chapter6 {
 
   def sequence3[A](fs: List[Rand[A]]): Rand[List[A]] =
     fs.foldRight(unit(List[A]()))((f, acc) => map2(f, acc)(_ :: _))
+
+  def flatMap[A, B](ra: Rand[A])(f: A => Rand[B]): Rand[B] =
+    rng => {
+      val (a, nextRng) = ra(rng)
+      f(a)(nextRng)
+    }
+
+  def nonNegativeIntLessThen(n: Int): Rand[Int] =
+    flatMap(Rng.nonNegativeInt) {
+      i =>
+        val mod = i % n
+        if (i + (n - 1) - mod >= 0) unit(mod)
+        else nonNegativeIntLessThen(n)
+    }
+
+  def mapUsingFlatMap[A, B](ra: Rand[A])(f: A => B): Rand[B] =
+    flatMap(ra)(a => unit(f(a)))
+
+  def map2UsingFlatMap[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] =
+    flatMap(ra)(a => flatMap(rb)(b => unit(f(a, b))))
+
 }
