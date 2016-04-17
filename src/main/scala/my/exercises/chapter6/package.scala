@@ -142,8 +142,30 @@ package object chapter6 {
   object State {
     def unit[S, A](a: A): State[S, A] = State(s => (s, a))
 
+    def get[S]: State[S, S] = State(s => (s, s))
+
+    def set[S](s: S): State[S, Unit] = State(s => (s, ()))
+
     def sequence[S, B](xs: List[State[S, B]]): State[S, List[B]] =
       xs.foldRight(unit[S, List[B]](List.empty))((s1, sb) => s1.map2(sb)(_ :: _))
   }
 
+  sealed trait Input
+  case object Coin extends Input
+  case object Turn extends Input
+
+  case class Machine(locked: Boolean, candies: Int, coins: Int)
+
+  def simulateMachine(inputs: List[Input]): State[Machine, (Int, Int)] = State(
+    machine => {
+      val machineAtTheEnd = inputs.foldLeft(machine) {
+        case (m @ Machine(_, 0, _), _) => m
+        case (m @ Machine(true, _, _), Turn) => m
+        case (m @ Machine(false, _, _), Coin) => m
+        case (m @ Machine(false, _, _), Turn) => m.copy(locked = true, candies = m.candies - 1)
+        case (m @ Machine(true, _, _), Coin) => m.copy(locked = false, coins = m.coins + 1)
+      }
+      (machineAtTheEnd, (machineAtTheEnd.candies, machineAtTheEnd.coins))
+    }
+  )
 }

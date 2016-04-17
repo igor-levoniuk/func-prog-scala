@@ -118,4 +118,48 @@ class Chapter6Test extends WordSpec with ShouldMatchers {
       sequence2(List(unit(1), unit(2), unit(3)))(rng)._1 shouldBe List(1, 2, 3)
     }
   }
+
+  "CandyMachine" when {
+    "out of candies" should {
+      "ignore all inputs" in {
+        simulateMachine(List(Coin)).run(Machine(locked = true, 0, 0)) shouldBe (Machine(locked = true, 0, 0), (0, 0))
+        simulateMachine(List(Coin)).run(Machine(locked = false, 0, 0)) shouldBe (Machine(locked = false, 0, 0), (0, 0))
+
+        simulateMachine(List(Turn)).run(Machine(locked = true, 0, 0)) shouldBe (Machine(locked = true, 0, 0), (0, 0))
+        simulateMachine(List(Turn)).run(Machine(locked = false, 0, 0)) shouldBe (Machine(locked = false, 0, 0), (0, 0))
+      }
+    }
+    "locked" when {
+      "coin is inserted" when {
+        "any candy left" should {
+          "unlock the machine" in {
+            simulateMachine(List(Coin)).run(Machine(locked = true, 1, 1)) shouldBe (Machine(locked = false, 1, 2), (1, 2))
+          }
+        }
+        "no candies left" should {
+          "do nothing" in {
+            simulateMachine(List(Coin)).run(Machine(locked = true, 0, 1)) shouldBe (Machine(locked = true, 0, 1), (0, 1))
+          }
+        }
+      }
+      "knob is turned" should {
+        "do nothing" in {
+          simulateMachine(List(Turn)).run(Machine(locked = true, 1, 1)) shouldBe (Machine(locked = true, 1, 1), (1, 1))
+        }
+      }
+    }
+    "unlocked" when {
+      "coin is inserted" should {
+        "do nothing" in {
+          simulateMachine(List(Coin)).run(Machine(locked = false, 1, 1)) shouldBe (Machine(locked = false, 1, 1), (1, 1))
+        }
+      }
+      "knob is turned" should {
+        "dispence a candy and lock" in {
+          simulateMachine(List(Turn)).run(Machine(locked = false, 1, 1)) shouldBe (Machine(locked = true, 0, 1), (0, 1))
+          simulateMachine(List(Turn)).run(Machine(locked = false, 10, 7)) shouldBe (Machine(locked = true, 9, 7), (9, 7))
+        }
+      }
+    }
+  }
 }
