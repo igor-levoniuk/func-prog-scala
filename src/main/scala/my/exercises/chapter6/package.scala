@@ -122,4 +122,28 @@ package object chapter6 {
   def map2UsingFlatMap[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] =
     flatMap(ra)(a => flatMap(rb)(b => unit(f(a, b))))
 
+
+  case class State[S, +A](run: S => (S, A)) {
+
+    def map[B](f: A => B): State[S, B] =
+      flatMap(a => State.unit(f(a)))
+
+    def map2[B, C](sb: State[S, B])(f: (A, B) => C): State[S, C] =
+      flatMap(a => sb.map(b => f(a, b)))
+
+    def flatMap[B](f: A => State[S, B]): State[S, B] = State(
+      s => {
+        val (s1, a) = run(s)
+        f(a).run(s1)
+      }
+    )
+  }
+
+  object State {
+    def unit[S, A](a: A): State[S, A] = State(s => (s, a))
+
+    def sequence[S, B](xs: List[State[S, B]]): State[S, List[B]] =
+      xs.foldRight(unit[S, List[B]](List.empty))((s1, sb) => s1.map2(sb)(_ :: _))
+  }
+
 }
