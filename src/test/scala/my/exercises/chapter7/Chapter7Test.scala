@@ -1,18 +1,23 @@
 package my.exercises.chapter7
 
+import java.util.concurrent.{Executors, ThreadPoolExecutor}
+
 import org.scalatest.{ShouldMatchers, WordSpec}
 
 class Chapter7Test extends WordSpec with ShouldMatchers {
 
+  private val NumberOfThreads = 10
+  val executorService = Executors.newFixedThreadPool(NumberOfThreads)
+
   "sum method" should {
     "calculate sum of empty sequence" in {
-      Par.get(sum(IndexedSeq.empty[Int])) shouldBe 0
+      Par.run(executorService)(sum(IndexedSeq.empty[Int])).get shouldBe 0
     }
     "calculate sum of single-element sequence" in {
-      Par.get(sum(IndexedSeq(0))) shouldBe 0
-      Par.get(sum(IndexedSeq(1))) shouldBe 1
-      Par.get(sum(IndexedSeq(-1))) shouldBe -1
-      Par.get(sum(IndexedSeq(100))) shouldBe 100
+      Par.run(executorService)(sum(IndexedSeq(0))).get shouldBe 0
+      Par.run(executorService)(sum(IndexedSeq(1))).get shouldBe 1
+      Par.run(executorService)(sum(IndexedSeq(-1))).get shouldBe -1
+      Par.run(executorService)(sum(IndexedSeq(100))).get shouldBe 100
     }
     "calculate sum of arbitrary sequence" in {
       val testSequences = Seq(
@@ -24,7 +29,7 @@ class Chapter7Test extends WordSpec with ShouldMatchers {
       )
 
       testSequences.foreach {
-        seq => seq.sum shouldEqual Par.get(sum(seq))
+        seq => seq.sum shouldEqual Par.run(executorService)(sum(seq)).get
       }
     }
   }
